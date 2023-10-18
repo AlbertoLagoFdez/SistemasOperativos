@@ -1,0 +1,42 @@
+[1mInformación de mi sistema para DESKTOP-4BC33B1(B[m
+
+(B[0;4mVersión del sistema(B[m
+
+Linux DESKTOP-4BC33B1 5.15.90.1-microsoft-standard-WSL2 #1 SMP Fri Jan 27 02:56:13 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+
+(B[0;4mTiempo de encendido del sistema(B[m
+
+/usr/bin/uptime
+
+(B[0;4mEspacio en disco(B[m
+
+Filesystem      1K-blocks      Used Available Use% Mounted on
+none              4044340         4   4044336   1% /mnt/wsl
+none            499565680 375005816 124559864  76% /usr/lib/wsl/drivers
+none              4044340         0   4044340   0% /usr/lib/wsl/lib
+/dev/sdc       1055762868   4432072 997627324   1% /
+none              4044340        84   4044256   1% /mnt/wslg
+rootfs            4041096      1936   4039160   1% /init
+none              4044340       864   4043476   1% /run
+none              4044340         0   4044340   0% /run/lock
+none              4044340         0   4044340   0% /run/shm
+none              4044340         0   4044340   0% /run/user
+tmpfs                4096         0      4096   0% /sys/fs/cgroup
+none              4044340        76   4044264   1% /mnt/wslg/versions.txt
+none              4044340        76   4044264   1% /mnt/wslg/doc
+drvfs           499565680 375005816 124559864  76% /mnt/c
+drvfs           781249996  12199196 769050800   2% /mnt/d
+snapfuse              128       128         0 100% /snap/bare/5
+snapfuse            41856     41856         0 100% /snap/snapd/20290
+snapfuse           134144    134144         0 100% /snap/ubuntu-desktop-installer/1260
+snapfuse            74752     74752         0 100% /snap/core22/607
+snapfuse            93952     93952         0 100% /snap/gtk-common-themes/1535
+snapfuse            75776     75776         0 100% /snap/core22/864
+snapfuse            41856     41856         0 100% /snap/snapd/20092
+snapfuse           134144    134144         0 100% /snap/ubuntu-desktop-installer/1269
+
+(B[0;4mEspacio en home por usuario(B[m
+(B[0;4mBytes(B[m   (B[0;4mDirectorio(B[m
+2249692	/home/alberto
+
+[32mActualizada el 10/18/23 05:45:24 PMWEST por alberto(B[m
