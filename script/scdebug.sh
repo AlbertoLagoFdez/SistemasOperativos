@@ -13,26 +13,16 @@ nattch_option=
 pid=
 ntrace_option=
 prefix=
-
 set -e
 
-Ntrace() {
-
-  dir="$HOME/.scdebug/"
-  for arg in "$dir"*; do
-    total_trace=$(ls $arg | wc -l)
-    process=$(basename $arg)
-    echo "$process"
-    echo "$total_trace"
-  done
-}
+#  Funciones
 
 error_exit() {
-  echo "${PROGNAME}: ${1:-"Error desconocido"}" 1>&2
-  exit 1
+    echo "${PROGNAME}: ${1:-"Error desconocido"}" 1>&2
+    exit 1
 }
 
-#Funcion que busca el PID sobre el prog mas reciente
+#  Funcion que busca el PID sobre el prog mas reciente
 
 SearchMostRecentPID() {
   ./ptbash
@@ -58,12 +48,15 @@ ChooseOption() {
   #  Mientras el total de argumentos sea > 0
   while [ $# -gt 0 ]; do
   case "$1" in
-
-    -k)
+# Opcion --count wc-l
+    --count| --count-name)
+      ls ${HOME}/.scdebug/ | wc -l
+      exit 0
       ;;
-    #  Opcion -h / --help
-    -h | --help)
-      Usage  #  Mostramos ayuda por pantalla
+#  Opcion -h / --help
+    -h|--help)
+      #  Mostramos ayuda por pantalla
+      Usage
       exit 0
       ;;
       #  Opcion -sto
@@ -75,16 +68,14 @@ ChooseOption() {
       #  Opcion -v / -vall (no hacen nada por ahora)
     -v | -vall)
       ;;
-      #  opcion -nattch
+      #  Opcion -nattch
     -nattch)
-      shift  #  Avanzamos $1
-      nattch_option="$1"  #  Guardamos el file
-      SearchMostRecentPID  #  Buscamos el PID mas reciente con $1
-      ;;
-      #  opcion -Ntrace
-    Ntrace)
-      ntrace_option="$1"
-      shift
+    #  Avanzamos $1
+      shift  
+      #  Guardamos el file
+      nattch_option="$1" 
+      #  Buscamos el PID mas reciente con $1 
+      SearchMostRecentPID  
       ;;
     --prefix )
       shift
@@ -99,14 +90,14 @@ ChooseOption() {
       prog="$1"  #  Guardamos el nombre del programa y hacemos shift para cambiar $1
       shift
       args="$@"  #  Guardamos el resto dNtrace
-    break
-    ;;
-  esac
+      break
+      ;;
+    esac
 done
 }
 
 PROG() {
-
+ 
   #  Creamos el uuid especifico
   uuid=$(uuidgen)
   #  Creamos una variable con la direccion del directorio
@@ -133,7 +124,6 @@ PROG() {
 
 #  Funcion principal 
 MainProgram() {
-  ps -u $USER --no-header --sort=etime | grep "scdebug.sh" 
   #  Comprobamos que se hayan pasado los parametros correctos
   CheckParameters "$@"
   if [ "$?" -eq 0 ]; then
@@ -150,3 +140,11 @@ MainProgram() {
 
 
 MainProgram "$@"
+
+
+
+
+
+#cat /proc/3818/status | less
+#psx y bucle sobre eso para mostrar los archivos que estan sinedo traceados
+#kill -SIGKILL pid
