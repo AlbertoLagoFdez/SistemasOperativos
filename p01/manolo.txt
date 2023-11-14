@@ -1,0 +1,112 @@
+    1  g++ l2t.cc -o l2t
+    2  g++ ptbash.cc -o ptbash
+    3  chmod 777 scdebug.sh 
+    4  ls
+    5  ls -l
+    6  ./ scdebug.sh 
+    7  ./scdebug.sh 
+    8  ./scdebug.sh myprogram arg1 arg2
+    9  cd
+   10  ls -a
+   11  cd .scdebug/
+   12  ls
+   13  ./scdebug.sh -nattch ls
+   14  cd ..
+   15  cd temp/
+   16  ls
+   17  ./scdebug.sh -nattch ls
+   18  exit
+   19  mkdir temp
+   20  cd temp
+   21  code .
+   22  cd ..
+   23  ls
+   24  cd .scdebug/
+   25  ls
+   26  exit
+   27  exit
+   28  exit
+   29  ./scdebug.sh -nattch ls
+   30  ps -u $USER --no-header --sort=etime | grep "$nattch_option" | tr -s " " | cut -d ' ' -f 2
+   31  ps -u $USER --no-header --sort=etime | grep "$nattch_option" | tr -s " " | cut -d ' ' -f 2
+   32  ps -u $USER --no-header --sort=etime | grep "$nattch_option" | tr -s " " | cut -d ' ' -f 2 | head
+   33  ps -u $USER --no-header --sort=etime | grep "$nattch_option" | tr -s " " | cut -d ' ' -f 2 | head -1
+   34  ./scdebug.sh -nattch ls
+   35  ./scdebug.sh -nattch ls
+   36  ./scdebug.sh -nattch ls
+   37  ps -u $USER --no-header --sort=etime | grep "$optionNattch" | tr -s " " | cut -d ' ' -f 2 | head -1 
+   38  ps -u $USER --no-header --sort=etime | grep "$optionNattch" | tr -s " " | cut -d ' ' -f 2 | head -1 
+   39  ps -u $USER --sort=etime | grep "$optionNattch" | tr -s " " | cut -d ' ' -f 2 | head -1 
+   40  ps -u $USER --sort=etime | grep "$optionNattch" | tr -s " " | head -1 
+   41  ps -u $USER --sort=etime | grep "$optionNattch" | tr -s " " | head -2 
+   42  ps -u $USER --sort=etime | grep "$optionNattch" | tr -s " " | head -3 
+   43  ps -u $USER --sort=etime | grep "$optionNattch" | tr -s " " | head -9
+   44  ps -u $USER --no-header --sort=etime | grep "$optionNattch" | tr -s " " | cut -d ' ' -f 2 | head -1 
+   45  scdebug -sto ‘-c -e file’ -nattch ls
+   46  ./scdebug -sto ‘-c -e file’ -nattch ls
+   47  ./scdebug.sh -sto ‘-c -e file’ -nattch ls
+   48  ./scdebug.sh --help
+   49  exit
+   50  chmod u+x p.sh 
+   51* 
+   52  ./p.sh 
+   53  ps x -o pid
+   54  ps x -o pid,com
+   55  ps -h
+   56  ps --help
+   57  ps --ayuda
+   58  clear
+   59  ps x -o pidname
+   60  ps x -o pid,name
+   61  strace -c -U name,max-time,total-time,calls,errors ls
+   62  strace -c name,max-time,total-time,calls,errors ls
+   63  strace -c -u name,max-time,total-time,calls,errors ls
+   64  strace -c -U name,max-time,total-time,calls,errors ls
+   65  strace -c ls
+   66  variable=$(strace -c ls | tail -n 1)
+   67  variable=$(strace -c ls 2>&1 | tail -n 1)
+   68  $variable
+   69  echo $variable
+   70  variable=$(strace -c ls 2>&1 | tail -n 1 | cut -f2-4)
+   71  echo $variable
+   72  variable=$(strace -c ls 2>&1 | tail -n 1 | cut -d ' ' -f2-4)
+   73  echo $variable
+   74  strace -c ls 2>&1 | tail -n 1 
+   75  strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2
+   76  strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4
+   77  variable=(strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4)
+   78  variable=(strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4)
+   79  strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4
+   80  variable=$(strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4)
+   81  echo $variable
+   82  tabla=$(echo -n "$variable")
+   83  echo -n $tabla
+   84  tabla=$(echo -n "$variable\n")
+   85  echo -n $tabla
+   86  echo -E $tabla
+   87  tabla=$(echo -n "$variable")
+   88  echo -E $tabla
+   89  tabla=$(echo -E "${tabla}\n$variable")
+   90  echo -E $tabla
+   91  echo -e $tabla
+   92  tabla=$(echo -E "${tabla}\n${variable}")
+   93  echo -e $tabla
+   94  history
+   95  clear
+   96  history > manolo.txt
+   97  clear
+   98  variable=(strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4)
+   99  variable=$(strace -c ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4)
+  100  echo $variable
+  101  ps -x -o pid,comm
+  102  variable=$(strace -c -p 8909 ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4)
+  103  variable=$(strace -c -p 8909 ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4 &)
+  104  variable=$(strace -c -p 8909 ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4 & sleep 0.1 && kill -SIGCONT 8909)
+  105  echo $variable
+  106  echo $variable
+  107  variable=$(strace -c -p 8909 ls 2>&1 | tail -n 1 | tr -s ' ' | cut -d ' ' -f2-4 & sleep 0.1 && kill -SIGCONT 8909)
+  108  g++ p.sh -o p
+  109  ./scdebug.sh ls
+  110  ./scdebug.sh ls
+  111  man stime
+  112  history > manolo.txt
