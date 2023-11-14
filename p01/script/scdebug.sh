@@ -1,4 +1,5 @@
 #!/bin/bash
+#falta la parte 4.3
 
 PROGNAME=$(basename $0)
 
