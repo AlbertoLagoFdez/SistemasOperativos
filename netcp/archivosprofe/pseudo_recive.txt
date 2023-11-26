@@ -1,0 +1,22 @@
+//Pseudocodigo recepcion
+//comprobar siempre errores en las llamadas
+//
+
+fd_socket<-socket
+sockaddr_in address <- make_ip_address <- IP, port
+bind(fd_socket, address) //IMPORTANTE
+fd <- open en modo escritura
+
+while
+
+buffer de 1KB
+nbytes = receive_from(fd_socket, buffer.data(), 
+                      buffer.size(), reinterpreted_cast de address,
+                      sizeof(address));
+if(nbytes<0) ERROR
+if(nbytes==0) salir del while
+buffer.resize(nbytes);
+write(fd_socket, buffer.data(), buffer.size(), ...)
+
+end_while
+devolver recursos (close) //mirar el scope_exit

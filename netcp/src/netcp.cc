@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <optional>
 #include <expected>
 #include <format>
@@ -11,6 +12,22 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+
+/**
+ *  === PARTE 2 ===
+ * receive
+ * socket -> fd_socket -> bind() 
+ * IP + Port -> fd_socket
+ * 
+ * crear variables de entorno
+ * export NETCP_IP
+ * export NETCP_PORT
+ * 
+ * std::getnv (cppreference.com)
+ * 
+ * signals.c
+ * 
+**/
 
 using open_file_result = std::expected<int, std::error_code>;
 using make_socket_result = std::expected<int, std::error_code>;
@@ -91,11 +108,52 @@ std::cout << std::format("El sistema '{}' envió el mensaje '{}'\n",
 )
 */
 
+//Segunda parte
+
+std::error_code netcp_send_file(const std::string& filename) 
+{
+  //abrir archivo
+  int flags = O_RDONLY;
+  mode_t mode = 0666;
+  open_file_result result_openfile = open_file(filename, flags, mode);
+  if (!result_openfile)
+  {
+    return std::error_code(result_openfile.error().value(), std::system_category());
+  }
+  int fd = *result_openfile;
+
+  std::vector<uint8_t> buffer(1024);
+  std::error_code error_read_file = read_file(fd, buffer);
+
+  int sock_fd;
+  auto address = make_ip_address("127.0.0.1", 8080);
+  auto result_socket = make_socket(address.value());
+  if (result_socket)
+  {
+    sock_fd = *result_socket;
+  }
+  std::error_code error_send_to = send_to(sock_fd, buffer, address.value());
+  if (error_send_to)
+  {
+    std::cout << "paco" << std::endl;
+  }
+
+  return std::error_code(0, std::system_category());
+}
+
+std::error_code netcp_receive_file(const std::string& filename) 
+{
+  return std::error_code(0, std::system_category());
+}
+
 struct program_options
 {
   bool show_help = false;
-  std::string input_file;     //Este seria el mensaje
   std::string output_filename;
+  bool listening_mode =  false;
+  std::string input_file;     //Este seria el mensaje
+
+//  std::string port;
   // ...
 };
 
@@ -126,11 +184,12 @@ std::optional<program_options> parse_args(int argc, char* argv[])
     {
       options.show_help = true;
     }
-    if (*it == "-o" || *it == "--output")
+    if (*it == "-l" || *it == "--listening")
     {
       if (++it != end)
       {
         options.output_filename = *it;
+        options.listening_mode = true;
       }
       else
       {
@@ -141,6 +200,8 @@ std::optional<program_options> parse_args(int argc, char* argv[])
     else
     {
       options.input_file = *it;
+      //++it;
+      //options.port = *it;
     }
   }
 return options;
@@ -152,48 +213,25 @@ int main(int argc, char **argv) {
   auto options = parse_args(argc, argv);
   if (!options)
   {
+    std::cerr << "Error!" << std::endl;
     return EXIT_FAILURE;
   }
-// Usar options.value() para acceder a las opciones...
+  // Usar options.value() para acceder a las opciones...
   if (options.value().show_help) 
   {
     Usage();  
   }
-
-  int flags = O_RDONLY | O_CREAT;
-  mode_t mode = 0666;
-  open_file_result result = open_file(options.value().input_file, flags, mode);
   
-  if (!result) {
-    //return result.error();
-    std::cerr << "¡Error! No se puede abrir el archivo." << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  int fd = *result;
-
-  std::vector<uint8_t> buffer(1024);
-  std::error_code error_read_file = read_file(fd, buffer);
-  if (error_read_file)
+  // Si listening_mode esta activado, entra en el modo de esucha;
+  if (options.value().listening_mode)
   {
-    std::cerr << std::format("Error ({}): {}\n", error_read_file.value(),
-    error_read_file.message());
+    std::cout << "Entra en el modo de recibir mensaje." << std::endl;
+    std::error_code error_receive = netcp_receive_file(options.value().output_filename);
   }
-
-  int sock_fd;
-  auto address = make_ip_address("127.0.0.1", 8080);
-  auto result_socket = make_socket(address.value());
-  if (result_socket)
+  else //Mandaria el mensaje
   {
-    sock_fd = *result_socket;
+    std::cout << "Entra en el modo de enviar mensaje." << std::endl;
+    std::error_code error_send = netcp_send_file(options.value().input_file);
   }
-
-  std::error_code error_send_to = send_to(sock_fd, buffer, address.value());
-  if (error_send_to)
-  {
-    std::cerr << std::format("Error ({}): {}\n", error_send_to.value(),
-    error_send_to.message());
-  }
-
   return EXIT_SUCCESS;
 }

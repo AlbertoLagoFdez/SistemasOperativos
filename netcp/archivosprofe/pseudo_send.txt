@@ -1,0 +1,27 @@
+// Pseudocodigo envio
+// Comprobar siempre errores
+//
+bool flag=true; // Variable global
+
+//En interceotacion de las señales
+//flags=false
+
+fd_socket<-socket
+Comprobar el archivo que vamos a leer (que exista)
+fd<-open en modo lectura
+sockaddr_in address <- make_ip_address <- IP, port
+
+while entre otras depende del flag
+
+buffer de 1KB
+nbytes<-read(fd, buffer.data(), buffer.size()...)
+if(nbytes<0) ERROR
+
+buffer.resize(nbytes);
+sendto(fd_socket, buffer.data(), buffer.size(), 0//flags, address, 
+      reinterpreted_cast<sockaddr_in>, sizeof(addr));
+
+if(nbytes==0) salimos del while.
+
+end_while
+devolver recursos (close) //mirar el scope_exit
