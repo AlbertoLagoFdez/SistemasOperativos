@@ -1,0 +1,9 @@
+total 96
+-rw-rw-r-- 1 alberto alberto  5043 nov 23 19:52 copianetcp.cc
+-rw-r--r-- 1 alberto alberto     0 nov 30 10:37 file.txt
+-rw-rw-r-- 1 alberto alberto   570 nov 23 10:18 pseudo_recive.txt
+-rw-rw-r-- 1 alberto alberto   645 nov 23 10:26 pseudo_send.txt
+-rwxrwxr-x 1 alberto alberto 46576 nov 30 10:36 readpipe
+-rw-rw-r-- 1 alberto alberto  2178 nov 30 10:36 readpipe.cc
+-rwxrwxr-x 1 alberto alberto 23952 nov 16 10:28 sendstring
+-rw-rw-r-- 1 alberto alberto  1332 nov 30 09:40 sendstring.cc

@@ -1,18 +1,3 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <optional>
-#include <expected>
-#include <format>
-#include <cstdint>
-#include <cstdlib>
-#include <unistd.h>
-#include <fcntl.h>
-#include <system_error>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
 /**
  *  === PARTE 2 ===
  * receive
@@ -28,6 +13,21 @@
  * signals.c
  * 
 **/
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <optional>
+#include <expected>
+#include <format>
+#include <cstdint>
+#include <cstdlib>
+#include <unistd.h>
+#include <fcntl.h>
+#include <system_error>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 using open_file_result = std::expected<int, std::error_code>;
 using make_socket_result = std::expected<int, std::error_code>;
@@ -57,9 +57,8 @@ std::error_code read_file(int fd, std::vector<uint8_t>& buffer)
   return std::error_code(0, std::system_category());
 }
 
-[[nodiscard]]
 std::optional<sockaddr_in> make_ip_address(
-    const std::optional<std::string> ip_address, uint16_t port=0)
+    const std::optional<std::string> ip_address, uint16_t port)
 {
   sockaddr_in remote_address {};
   remote_address.sin_family=AF_INET;
@@ -132,17 +131,98 @@ std::error_code netcp_send_file(const std::string& filename)
   {
     sock_fd = *result_socket;
   }
+
   std::error_code error_send_to = send_to(sock_fd, buffer, address.value());
   if (error_send_to)
   {
     std::cout << "paco" << std::endl;
   }
-
+  std::cout << "ok\n";
   return std::error_code(0, std::system_category());
+}
+
+
+/*
+  ssize_t bytes_read = read(fd, buffer.data(), buffer.size());
+  if (bytes_read < 0)
+  {
+    return std::error_code(errno, std::system_category());
+  }
+  buffer.resize(bytes_read);
+  return std::error_code(0, std::system_category());
+*/
+std::error_code write_file(int fd, std::vector<uint8_t>& buffer)
+{
+  ssize_t bytes_write = write(fd, buffer.data(), buffer.size());
+  if(bytes_write < 0)
+  {
+    return std::error_code(errno, std::system_category());
+  }
+  buffer.resize(bytes_write);
+  return std::error_code(0, std::system_category());
+
+}
+
+// Funcion para recibir el mensaje con un std::String
+std::error_code receive_from(int fd, std::vector<uint8_t>& buffer,
+    sockaddr_in& address)
+{
+  socklen_t src_len = sizeof(address);
+
+  int bytes_read = recvfrom(fd,
+      buffer.data(), buffer.size(), 0,
+      reinterpret_cast<sockaddr*>(&address),
+      &src_len);
+  if(bytes_read < 0)
+  {
+    //error al recibir mensaje.
+  }
+  buffer.resize(bytes_read);
+/*
+  std::cout << std::format("El sistema '{}'' envió el mensaje '{}'\n",
+    ip_address_to_string(address),
+    message.text.c_str() );
+*/
 }
 
 std::error_code netcp_receive_file(const std::string& filename) 
 {
+  //abrir archivo
+  int flags = O_WRONLY;
+  mode_t mode = 0666;
+  open_file_result result_openfile = open_file(filename, flags, mode);
+  if (!result_openfile)
+  {
+    return std::error_code(result_openfile.error().value(), std::system_category());
+  }
+  int fd = *result_openfile;
+
+  int sock_fd;
+  auto address = make_ip_address("0.0.0.0", 8080);
+  auto result_socket = make_socket(address.value());
+  if (result_socket)
+  {
+    sock_fd = *result_socket;
+  }
+
+  int result_bind = bind(
+      sock_fd,
+      reinterpret_cast<const sockaddr*>(&address),
+      sizeof(address)
+      );
+  if (result_bind < 0)
+  {
+    return std::error_code(errno, std::system_category());
+  }
+  std::vector<uint8_t> buffer(1024);
+  std::error_code error_receive = receive_from(fd, buffer, address.value());
+  if (error_receive)
+  {
+    //error
+  }
+  //escribir el mensaje en el archivo.
+  std::error_code error_write = write_file(fd, buffer);
+  std::cout << "ok\n";
   return std::error_code(0, std::system_category());
 }
 
