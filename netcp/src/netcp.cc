@@ -14,6 +14,9 @@
  * 
 **/
 
+// crear archivo para enviar 
+// dd if=/dev/urandom of=testfile bs=1k count=1 iflag=fullblock
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -28,9 +31,11 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <experimental/scope>
 
 using open_file_result = std::expected<int, std::error_code>;
 using make_socket_result = std::expected<int, std::error_code>;
+using std::experimental::scope_exit;
 
 [[nodiscard]]
 open_file_result open_file(const std::string& path,
@@ -85,7 +90,7 @@ make_socket_result make_socket(
 std::error_code send_to(int fd, const std::vector<uint8_t>& message,
      const sockaddr_in& address)
 {
-  int bytes_sent=sendto(fd,
+  size_t bytes_sent=sendto(fd,
                         message.data(),
                         message.size(),
                         0,
@@ -95,7 +100,6 @@ std::error_code send_to(int fd, const std::vector<uint8_t>& message,
   {
     return std::error_code(errno, std::system_category());
   }
-  close(fd);
   return std::error_code(0, std::system_category());
 }
 
@@ -111,33 +115,107 @@ std::cout << std::format("El sistema '{}' envió el mensaje '{}'\n",
 
 std::error_code netcp_send_file(const std::string& filename) 
 {
-  //abrir archivo
-  int flags = O_RDONLY;
-  mode_t mode = 0666;
-  open_file_result result_openfile = open_file(filename, flags, mode);
-  if (!result_openfile)
+  std::cout << "Send mode...\n";
+  //Leer variables de entorno
+  //
+  //ip
+  std::optional<std::string> ip;
+  char* char_ip = std::getenv("NETCP_IP");
+  if(!char_ip)
   {
-    return std::error_code(result_openfile.error().value(), std::system_category());
+    ip = "127.0.0.1";
   }
-  int fd = *result_openfile;
+  else
+  {
+    ip = char_ip;
+  }
+  //port
+  //
+  uint16_t port;
+  char* char_port = std::getenv("NETCP_PORT");
+  if(char_port == NULL)
+  {
+    port = 8080;
+  }
+  else
+  {
+    port = static_cast<uint16_t>(std::strtoul(char_port, nullptr, 10));
+  }
+  // ip address
+  auto address = make_ip_address(ip, port);
+  if (!address)
+  {
+    std::error_code error(errno, std::system_category());
+    std::cerr << "Error make ip address.\n";
+    return error;
+  }
 
-  std::vector<uint8_t> buffer(1024);
-  std::error_code error_read_file = read_file(fd, buffer);
-
+  // socket
   int sock_fd;
-  auto address = make_ip_address("127.0.0.1", 8080);
   auto result_socket = make_socket(address.value());
   if (result_socket)
   {
-    sock_fd = *result_socket;
+    sock_fd = result_socket.value();
+  }
+  else
+  {
+    std::error_code error(errno, std::system_category());
+    std::cerr << "Error at make socket.\n";
+    return error;
   }
 
-  std::error_code error_send_to = send_to(sock_fd, buffer, address.value());
-  if (error_send_to)
+  //abrir archivo
+  //
+  int flags = O_RDONLY;
+  mode_t mode = 0666;
+  
+  open_file_result fd = open_file(filename, flags, mode);
+  if (!fd.has_value())
   {
-    std::cout << "paco" << std::endl;
+    std::cout << "Error open file\n";
+    return std::error_code(fd.error().value(), fd.error().category());
   }
-  std::cout << "ok\n";
+  //int fd = *result_openfile;
+
+  auto src_guard=scope_exit(
+            [sock_fd] {close(sock_fd); });
+
+  auto src_guard2=scope_exit(
+            [fd] {close(fd.value()); });
+
+  // Enviar el menzaje
+  std::vector<uint8_t> buffer(1024);
+  while (buffer.size() > 0) 
+  {
+    std::cout << "paco";
+    std::error_code error_read_file = read_file(fd.value(), buffer);
+    // Error en el read file.
+    //
+    if (error_read_file)
+    {
+      close(fd.value());
+      error_read_file.message();
+      std::error_code error (error_read_file.value() ,error_read_file.category());
+      std::cout << "Error read file\n";
+      return error;
+    }
+
+    std::error_code error_send_to = send_to(sock_fd, buffer, address.value());
+    //Error en el send_to.
+    //
+    if (error_send_to)
+    {
+      close(fd.value());
+      error_send_to.message();
+      std::error_code error (error_send_to.value(), error_send_to.category());
+      std::cout << "Error send to\n";
+      return error;
+    }
+    usleep(1000);
+  }
+  close(fd.value());
+  close(sock_fd);
+  std::cout << "ok...\n";
   return std::error_code(0, std::system_category());
 }
 
@@ -158,26 +236,29 @@ std::error_code write_file(int fd, std::vector<uint8_t>& buffer)
   {
     return std::error_code(errno, std::system_category());
   }
-  buffer.resize(bytes_write);
   return std::error_code(0, std::system_category());
-
 }
 
 // Funcion para recibir el mensaje con un std::String
-std::error_code receive_from(int fd, std::vector<uint8_t>& buffer,
+std::error_code recieve_from(int fd, std::vector<uint8_t>& buffer,
     sockaddr_in& address)
 {
   socklen_t src_len = sizeof(address);
 
-  int bytes_read = recvfrom(fd,
-      buffer.data(), buffer.size(), 0,
-      reinterpret_cast<sockaddr*>(&address),
-      &src_len);
-  if(bytes_read < 0)
+  int bytes_recv = recvfrom(fd,
+        buffer.data(), 
+        buffer.size(), 
+        0,
+        reinterpret_cast<sockaddr*>(&address),
+        &src_len);
+  
+  if(bytes_recv < 0)
   {
-    //error al recibir mensaje.
+    return std::error_code(errno, std::system_category());
   }
-  buffer.resize(bytes_read);
+  
+  buffer.resize(bytes_recv);
+  return std::error_code(0, std::system_category());
 /*
   std::cout << std::format("El sistema '{}'' envió el mensaje '{}'\n",
     ip_address_to_string(address),
@@ -185,44 +266,114 @@ std::error_code receive_from(int fd, std::vector<uint8_t>& buffer,
 */
 }
 
-std::error_code netcp_receive_file(const std::string& filename) 
+std::error_code netcp_recieve_file(const std::string& filename) 
 {
-  //abrir archivo
-  int flags = O_WRONLY;
-  mode_t mode = 0666;
-  open_file_result result_openfile = open_file(filename, flags, mode);
-  if (!result_openfile)
+  std::cout << "listen mode...\n";
+  std::cout << "waiting...\n";
+  //Leer variables de entorno
+  //
+  //ip
+  std::optional<std::string> ip;
+  char* char_ip = std::getenv("NETCP_IP");
+  if(!char_ip)
   {
-    return std::error_code(result_openfile.error().value(), std::system_category());
+    ip = "0.0.0.0";
   }
-  int fd = *result_openfile;
+  else
+  {
+    ip = char_ip;
+  }
+  //port
+  //
+  uint16_t port;
+  char* char_port = std::getenv("NETCP_PORT");
+  if(char_port == NULL)
+  {
+    port = 8080;
+  }
+  else
+  {
+    port = static_cast<uint16_t>(std::strtoul(char_port, nullptr, 10));
+  }
+  // ip address
+  auto address = make_ip_address(ip, port);
+  if (!address)
+  {
+    std::error_code error(errno, std::system_category());
+    std::cerr << "Error make ip address.\n";
+    return error;
+  }
 
+  // socket
   int sock_fd;
-  auto address = make_ip_address("0.0.0.0", 8080);
   auto result_socket = make_socket(address.value());
   if (result_socket)
   {
-    sock_fd = *result_socket;
+    sock_fd = result_socket.value();
+  }
+  else
+  {
+    std::error_code error(errno, std::system_category());
+    std::cerr << "Error at make socket.\n";
+    return error;
   }
 
-  int result_bind = bind(
-      sock_fd,
-      reinterpret_cast<const sockaddr*>(&address),
-      sizeof(address)
-      );
-  if (result_bind < 0)
-  {
-    return std::error_code(errno, std::system_category());
+  if (bind(sock_fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1) {
+    std::cerr << "Error assign dir to socket.\n";
+    close(sock_fd);
+    std::error_code error(errno, std::system_category());
+    return error;
   }
+
+  //abrir archivo
+  //
+  int flags = O_WRONLY | O_CREAT | O_TRUNC;
+  mode_t mode = 0666;
+  
+  open_file_result fd = open_file(filename, flags, mode);
+  if (!fd.has_value())
+  {
+    std::cout << "Error open file\n";
+    return std::error_code(fd.error().value(), fd.error().category());
+  }
+  //int fd = *result_openfile;
+
+  auto src_guard=scope_exit(
+            [sock_fd] {close(sock_fd); });
+
+  auto src_guard2=scope_exit(
+            [fd] {close(fd.value()); });
+
+  // Enviar el menzaje
   std::vector<uint8_t> buffer(1024);
-  std::error_code error_receive = receive_from(fd, buffer, address.value());
-  if (error_receive)
+  while (true) 
   {
-    //error
+    //receive
+    std::error_code error_recieve = recieve_from(sock_fd, buffer, address.value());
+    if (error_recieve)
+    {
+      std::cerr << "Error at recieve.\n";
+      std::error_code error(errno, std::system_category());
+      return error; 
+    }
+
+    if (!buffer.empty())
+    {
+      std::error_code error_write_file = write_file(fd.value(), buffer);
+      if (error_write_file)
+      {
+        std::cerr << "Error writing file.\n";
+        std::error_code error(errno, std::system_category());
+        return error;
+      }
+    }
+    else{
+      break;
+    }
   }
-  //escribir el mensaje en el archivo.
-  std::error_code error_write = write_file(fd, buffer);
-  std::cout << "ok\n";
+  close(fd.value());
+  close(sock_fd);
+  std::cout << "ok...\n";
   return std::error_code(0, std::system_category());
 }
 
@@ -305,12 +456,11 @@ int main(int argc, char **argv) {
   // Si listening_mode esta activado, entra en el modo de esucha;
   if (options.value().listening_mode)
   {
-    std::cout << "Entra en el modo de recibir mensaje." << std::endl;
-    std::error_code error_receive = netcp_receive_file(options.value().output_filename);
+    //std::cout << "Entra en el modo de recibir mensaje." << std::endl;
+    std::error_code error_receive = netcp_recieve_file(options.value().output_filename);
   }
-  else //Mandaria el mensaje
+  else 
   {
-    std::cout << "Entra en el modo de enviar mensaje." << std::endl;
     std::error_code error_send = netcp_send_file(options.value().input_file);
   }
   return EXIT_SUCCESS;
