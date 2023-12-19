@@ -1,0 +1,54 @@
+//Pseudocodigo recepcion
+//comprobar siempre errores en las llamadas
+//
+
+fd_socket<-socket
+sockaddr_in address <- make_ip_address <- IP, port
+bind(fd_socket, address) //IMPORTANTE
+fd <- open en modo escritura
+
+while
+
+buffer de 1KB
+nbytes = receive_from(fd_socket, buffer.data(), 
+                      buffer.size(), reinterpreted_cast de address,
+                      sizeof(address));
+if(nbytes<0) ERROR
+if(nbytes==0) salir del while
+buffer.resize(nbytes);
+write(fd_socket, buffer.data(), buffer.size(), ...)
+
+end_while
+devolver recursos (close) //mirar el scope_exit
+
+
+{
+if ((*it == "-h" || *it == "--help") && options.read_comm == false) 
+    {
+      options.show_help = true;
+    }
+    if ((*it == "-l" || *it == "--listening") && options.read_comm == false)
+    {
+      if (++it != end)
+      {
+        options.output_filename = *it;
+        options.listening_mode = true;
+      }
+      else
+      {
+      Usage();
+      return std::nullopt;
+      }
+    }
+    if (*it == "-c" && )
+    {
+
+    }
+    else
+    {
+      options.input_file = *it;
+      //++it;
+      //options.port = *it;
+    }
+  }
+return options;
